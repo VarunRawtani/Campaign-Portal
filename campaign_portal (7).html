@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCE Campaign Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #EDEBE5;
+    --border: #D8D5CC;
+    --text: #1A1917;
+    --muted: #7A7770;
+    --accent: #1A1917;
+    --accent-light: #F0EDE6;
+    --green: #2D6A4F;
+    --green-bg: #E8F5EE;
+    --amber: #92400E;
+    --amber-bg: #FEF3C7;
+    --blue: #1E40AF;
+    --blue-bg: #EFF6FF;
+    --red: #991B1B;
+    --red-bg: #FEF2F2;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+  .main { margin-left: 220px; flex: 1; padding: 32px 36px; }
+
+  /* SIDEBAR */
+  .logo { padding: 0 20px 28px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .logo-text { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--text); text-transform: uppercase; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; color: var(--muted); cursor: pointer; font-size: 13.5px; border-left: 2px solid transparent; transition: all 0.15s; }
+  .nav-item:hover { color: var(--text); background: var(--accent-light); }
+  .nav-item.active { color: var(--text); border-left-color: var(--text); background: var(--accent-light); font-weight: 500; }
+  .nav-icon { width: 16px; text-align: center; font-size: 15px; }
+  .nav-section { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 16px 20px 6px; font-weight: 500; }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .user-chip { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--text); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-role { font-size: 11px; color: var(--muted); }
+
+  /* TOP BAR */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 500; }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+  .btn-primary:hover { background: #333; }
+
+  /* VIEW SWITCHER */
+  .view-switcher { display: flex; gap: 0; background: var(--surface2); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 28px; width: fit-content; }
+  .view-tab { padding: 7px 18px; border-radius: 5px; font-size: 13px; cursor: pointer; color: var(--muted); font-weight: 500; transition: all 0.15s; border: none; background: none; font-family: 'DM Sans', sans-serif; }
+  .view-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* STATS */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .stat-num { font-size: 28px; font-weight: 600; letter-spacing: -0.03em; font-family: 'DM Mono', monospace; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-delta { font-size: 11px; margin-top: 8px; font-family: 'DM Mono', monospace; }
+  .delta-up { color: var(--green); }
+  .delta-pend { color: var(--amber); }
+
+  /* FILTERS */
+  .filters { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+  .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 12.5px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .filter-chip:hover { border-color: var(--text); color: var(--text); }
+  .filter-chip.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .search-box { margin-left: auto; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; }
+  .search-box input { border: none; outline: none; background: none; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; width: 180px; }
+  .search-box input::placeholder { color: var(--muted); }
+
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--surface2); border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--accent-light); }
+  td { padding: 13px 16px; font-size: 13.5px; vertical-align: middle; }
+  .campaign-name { font-weight: 500; color: var(--text); }
+  .campaign-brand { font-size: 12px; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 500; }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-gray { background: var(--surface2); color: var(--muted); }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  /* STAGE PILLS */
+  .stage-track { display: flex; gap: 4px; align-items: center; }
+  .stage-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+  .stage-dot.done { background: var(--green); }
+  .stage-dot.active { background: var(--amber); }
+
+  /* PANEL (campaign detail) */
+  .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 100; }
+  .panel-overlay.open { display: block; }
+  .panel { position: fixed; right: 0; top: 0; bottom: 0; width: 520px; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; overflow-y: auto; transform: translateX(100%); transition: transform 0.25s ease; }
+  .panel.open { transform: translateX(0); }
+  .panel-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+  .panel-title { font-size: 17px; font-weight: 600; }
+  .panel-brand { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 3px; }
+  .close-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--muted); padding: 0; line-height: 1; }
+  .panel-body { padding: 24px 28px; }
+  .panel-section { margin-bottom: 24px; }
+  .panel-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .info-item { }
+  .info-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .info-val { font-size: 13.5px; font-weight: 500; }
+  .stage-list { display: flex; flex-direction: column; gap: 0; }
+  .stage-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .stage-row:last-child { border-bottom: none; }
+  .stage-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .stage-done { background: var(--green-bg); color: var(--green); }
+  .stage-active { background: var(--amber-bg); color: var(--amber); }
+  .stage-pending { background: var(--surface2); color: var(--muted); }
+  .stage-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .stage-time { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .upload-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+  .upload-icon { font-size: 18px; }
+  .upload-name { font-size: 13px; font-weight: 500; }
+  .upload-meta { font-size: 11px; color: var(--muted); }
+  .seg-table { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .seg-table th { background: var(--surface2); padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; text-align: left; }
+  .seg-table td { padding: 9px 12px; font-size: 13px; border-top: 1px solid var(--border); }
+  .seg-count { font-family: 'DM Mono', monospace; font-weight: 500; }
+  .approval-box { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .approval-label { font-size: 13px; font-weight: 500; }
+  .approval-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .approve-btn { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: none; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--text); }
+  .approve-btn:hover { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+  /* CLIENT VIEW */
+  .client-wrap { max-width: 760px; }
+  .client-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px; }
+  .client-card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .client-card-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  input[type=text], input[type=email], input[type=date], input[type=time], select, textarea {
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text); background: var(--surface);
+    outline: none; transition: border 0.15s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--text); }
+  textarea { resize: vertical; min-height: 90px; }
+  .upload-zone { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 28px; text-align: center; cursor: pointer; transition: all 0.15s; color: var(--muted); font-size: 13px; background: var(--bg); }
+  .upload-zone:hover { border-color: var(--text); color: var(--text); background: var(--accent-light); }
+  .upload-zone-icon { font-size: 28px; margin-bottom: 8px; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .seg-input-row { display: grid; grid-template-columns: 1fr 120px 28px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .seg-input-row input { margin: 0; }
+  .remove-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 0; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); }
+  .remove-btn:hover { background: var(--red-bg); color: var(--red); }
+  .add-link { font-size: 12.5px; color: var(--muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; margin-top: 4px; }
+  .add-link:hover { color: var(--text); }
+  .alert-banner { background: var(--amber-bg); border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--amber); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+  /* CLIENT CAMPAIGN LIST */
+  .client-camp-list { display: flex; flex-direction: column; gap: 10px; }
+  .client-camp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: background 0.1s; }
+  .client-camp-card:hover { background: var(--accent-light); }
+  .client-camp-info { flex: 1; }
+  .client-camp-name { font-weight: 500; font-size: 14px; }
+  .client-camp-meta { font-size: 12px; color: var(--muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .client-stage { font-size: 12px; color: var(--muted); text-align: right; }
+
+  /* TABS inside panel */
+  .panel-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 28px; margin-bottom: 0; }
+  .ptab { padding: 12px 0; margin-right: 24px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 500; transition: all 0.15s; }
+  .ptab.active { color: var(--text); border-bottom-color: var(--text); }
+  .ptab-content { display: none; padding: 24px 28px; }
+  .ptab-content.active { display: block; }
+
+  .ch-chip { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .ch-chip:hover { border-color: var(--text); color: var(--text); }
+  .ch-chip.selected { background: var(--text); color: #fff; border-color: var(--text); }
+  .ch-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px; animation: fadeSlide 0.2s ease; }
+  .ch-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .ch-icon { font-size: 18px; }
+  .ch-title { font-size: 16px; font-weight: 600; }
+  .ch-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  @keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">OCE Portal</div>
+      <div class="logo-sub">One Class Equity</div>
+    </div>
+    <span class="nav-section">Campaigns</span>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">◈</span> All Campaigns
+    </div>
+    <div class="nav-item" onclick="showPage('new')">
+      <span class="nav-icon">+</span> New Campaign
+    </div>
+    <span class="nav-section">Views</span>
+    <div class="nav-item" onclick="switchToClient()">
+      <span class="nav-icon">↗</span> Client View
+    </div>
+    <span class="nav-section">Activity</span>
+    <div class="nav-item" onclick="showPage('logs')">
+      <span class="nav-icon">≡</span> Logs
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar">MT</div>
+        <div>
+          <div class="user-name">Marketing Team</div>
+          <div class="user-role">Internal · All access</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VIEW TOGGLE -->
+    <div class="view-switcher" id="viewSwitcher">
+      <button class="view-tab active" onclick="setView('internal', this)">⚙ Internal View</button>
+      <button class="view-tab" onclick="setView('client', this)">👤 Client View</button>
+    </div>
+
+    <!-- INTERNAL VIEW -->
+    <div id="internalView">
+
+      <!-- DASHBOARD PAGE -->
+      <div id="page-dashboard">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Campaign Dashboard</div>
+            <div class="page-sub">All active and upcoming campaigns</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn" onclick="showPage('new')">+ New Campaign</button>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-num">12</div>
+            <div class="stat-label">Total active</div>
+            <div class="stat-delta delta-up">↑ 3 this week</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">4</div>
+            <div class="stat-label">Awaiting approval</div>
+            <div class="stat-delta delta-pend">⚠ Action needed</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">3</div>
+            <div class="stat-label">In testing</div>
+            <div class="stat-delta" style="color:var(--blue)">→ Campaign team</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">2</div>
+            <div class="stat-label">Launching today</div>
+            <div class="stat-delta delta-up">✓ Approved</div>
+          </div>
+        </div>
+
+        <div class="filters">
+          <button class="filter-chip active" onclick="filterCamps('All', this)">All</button>
+          <button class="filter-chip" onclick="filterCamps('Brief Received', this)">Brief Received</button>
+          <button class="filter-chip" onclick="filterCamps('Testing', this)">In Testing</button>
+          <button class="filter-chip" onclick="filterCamps('Awaiting Approval', this)">Awaiting Approval</button>
+          <button class="filter-chip" onclick="filterCamps('Approved', this)">Approved</button>
+          <button class="filter-chip" onclick="filterCamps('Live', this)">Live</button>
+          <div class="search-box">
+            <span style="color:var(--muted);font-size:14px">⌕</span>
+            <input type="text" placeholder="Search campaigns..." oninput="searchCamps(this.value)">
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="campTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Campaign</th>
+                <th>Brand</th>
+                <th>Schedule</th>
+                <th>Status</th>
+                <th>Stage</th>
+                <th>Uploaded by</th>
+                <th>Segments</th>
+              </tr>
+            </thead>
+            <tbody id="campBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NEW CAMPAIGN PAGE -->
+      <div id="page-new" style="display:none">
+        <div class="topbar">
+          <div>
+            <div class="page-title">New Campaign</div>
+            <div class="page-sub">Fill in campaign details or submit on behalf of a client</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn" onclick="showPage('dashboard')">← Back</button>
+          </div>
+        </div>
+        <div style="max-width:680px">
+          <div class="client-card">
+            <div class="client-card-title">Campaign Details</div>
+            <div class="client-card-sub">Core information about this campaign</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Campaign Name</label>
+                <input type="text" placeholder="e.g. Summer Sale 2025">
+              </div>
+              <div class="form-group">
+                <label>Brand / Client</label>
+                <select>
+                  <option>Select brand...</option>
+                  <option>Zara India</option>
+                  <option>Nykaa</option>
+                  <option>Myntra</option>
+                  <option>Lenskart</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Schedule Date</label>
+                <input type="date">
+              </div>
+              <div class="form-group">
+                <label>Schedule Time</label>
+                <input type="time">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Send Date</label>
+                <input type="date">
+              </div>
+              <div class="form-group">
+                <label>Send Time</label>
+                <input type="time">
+              </div>
+            </div>
+            <div class="form-group full" style="margin-bottom:14px">
+              <label>Campaign Brief / Objective</label>
+              <textarea placeholder="Describe the campaign objective, target audience, key message..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Uploaded by (name or email)</label>
+              <input type="text" placeholder="e.g. priya@zaraIndia.com">
+            </div>
+          </div>
+
+          <div class="client-card">
+            <div class="client-card-title">Content & Creative</div>
+            <div class="client-card-sub">Upload or paste campaign content</div>
+            <div class="form-group full" style="margin-bottom:16px">
+              <label>Content Copy (paste here)</label>
+              <textarea placeholder="Paste email body, SMS copy, push notification text..."></textarea>
+            </div>
+            <label style="display:block;margin-bottom:8px">Creative Assets</label>
+            <div class="upload-zone" onclick="alert('File picker would open here')">
+              <div class="upload-zone-icon">⬆</div>
+              <div style="font-weight:500;margin-bottom:4px">Click to upload files</div>
+              <div style="font-size:12px">Images, banners, HTML templates · Max 50MB each</div>
+            </div>
+          </div>
+
+          <div class="client-card">
+            <div class="client-card-title">Segment Specifications</div>
+            <div class="client-card-sub">Define target segments — data team will fill in counts</div>
+            <div style="display:grid;grid-template-columns:1fr 120px 28px;gap:8px;margin-bottom:6px">
+              <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase">Segment Name</span>
+              <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase">Count</span>
+              <span></span>
+            </div>
+            <div id="segRows">
+              <div class="seg-input-row"><input type="text" placeholder="e.g. Active users – Mumbai"><input type="text" placeholder="TBD" style="font-family:'DM Mono',monospace"><button class="remove-btn" onclick="removeSeg(this)">✕</button></div>
+              <div class="seg-input-row"><input type="text" placeholder="e.g. Lapsed – Tier 2"><input type="text" placeholder="TBD" style="font-family:'DM Mono',monospace"><button class="remove-btn" onclick="removeSeg(this)">✕</button></div>
+            </div>
+            <button class="add-link" onclick="addSeg()">+ Add segment</button>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:32px">
+            <button class="btn" onclick="showPage('dashboard')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCampaign()">Save Campaign</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGS PAGE -->
+      <div id="page-logs" style="display:none">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Activity Logs</div>
+            <div class="page-sub">All actions across campaigns, teams and clients</div>
+          </div>
+          <div class="topbar-actions">
+            <div class="search-box">
+              <span style="color:var(--muted);font-size:14px">⌕</span>
+              <input type="text" placeholder="Filter logs..." oninput="filterLogs(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Campaign / Detail</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CLIENT VIEW -->
+    <div id="clientView" style="display:none">
+      <div class="topbar">
+        <div>
+          <div class="page-title">My Campaigns</div>
+          <div class="page-sub">Zara India · priya@zaraindia.com</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="showClientNew()">+ New Campaign</button>
+        </div>
+      </div>
+
+      <div id="clientList">
+        <div class="alert-banner">
+          ⚠ Segment counts updated on <strong>Summer Denim Drop</strong> — please review and approve.
+        </div>
+        <div class="client-camp-list" id="clientCampList"></div>
+      </div>
+
+      <div id="clientNew" style="display:none">
+        <button class="btn" style="margin-bottom:20px" onclick="showClientList()">← Back to campaigns</button>
+        <div class="client-wrap">
+          <div class="client-card">
+            <div class="client-card-title">New Campaign</div>
+            <div class="client-card-sub">Fill in what you have — our team will follow up for anything missing</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Campaign Name</label>
+                <input type="text" placeholder="e.g. Monsoon Collection Launch">
+              </div>
+              <div class="form-group">
+                <label>Your Name / Email</label>
+                <input type="email" placeholder="priya@zaraindia.com">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Preferred Send Date</label>
+                <input type="date">
+              </div>
+              <div class="form-group">
+                <label>Preferred Send Time</label>
+                <input type="time">
+              </div>
+            </div>
+            <div class="form-row" style="margin-bottom:0">
+              <div class="form-group full">
+                <label>Campaign Type <span style="font-weight:400;color:var(--muted)">(select all that apply)</span></label>
+                <div id="channelPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px">
+                  <button type="button" class="ch-chip" data-ch="Email" onclick="toggleChannel(this)">✉ Email</button>
+                  <button type="button" class="ch-chip" data-ch="SMS" onclick="toggleChannel(this)">💬 SMS</button>
+                  <button type="button" class="ch-chip" data-ch="Push Notification" onclick="toggleChannel(this)">🔔 Push</button>
+                  <button type="button" class="ch-chip" data-ch="WhatsApp" onclick="toggleChannel(this)">📱 WhatsApp</button>
+                  <button type="button" class="ch-chip" data-ch="RCS" onclick="toggleChannel(this)">✦ RCS</button>
+                  <button type="button" class="ch-chip" data-ch="In-App" onclick="toggleChannel(this)">◻ In-App</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-group full" style="margin-bottom:14px">
+              <label>Brief / What you want to achieve</label>
+              <textarea placeholder="Describe the campaign goal, offer, key message, any specific requirements..."></textarea>
+            </div>
+            <div class="form-group full" style="margin-bottom:0;position:relative">
+              <label>Assign to (OCE team member)</label>
+              <input type="email" id="assigneeInput" placeholder="Type email to assign..." autocomplete="off" oninput="filterAssignSuggestions(this.value)" onfocus="filterAssignSuggestions(this.value)" onblur="setTimeout(hideAssignSuggestions,150)">
+              <div id="assignSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:50;margin-top:4px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
+            </div>
+          </div>
+
+          <div id="channelContentCards"></div>
+
+          <div class="client-card">
+            <div class="client-card-title">Segments</div>
+            <div class="client-card-sub">Tell us who you want to target — describe the segments as you know them</div>
+            <div id="clientSegRows">
+              <div class="seg-input-row" style="grid-template-columns:1fr 28px">
+                <input type="text" placeholder="e.g. Female users, 18–35, Mumbai, active last 90 days">
+                <button class="remove-btn" onclick="removeSeg(this)">✕</button>
+              </div>
+            </div>
+            <button class="add-link" onclick="addClientSeg()">+ Add segment</button>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:32px">
+            <button class="btn" onclick="showClientList()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitClientCamp()">Submit to OCE Team</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CAMPAIGN DETAIL PANEL -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="panel" id="detailPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="panelTitle">–</div>
+      <div class="panel-brand" id="panelBrand">–</div>
+    </div>
+    <button class="close-btn" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-tabs">
+    <div class="ptab active" onclick="switchPTab('overview', this)">Overview</div>
+    <div class="ptab" onclick="switchPTab('content', this)">Content</div>
+    <div class="ptab" onclick="switchPTab('segments', this)">Segments</div>
+    <div class="ptab" onclick="switchPTab('approvals', this)">Approvals</div>
+  </div>
+
+  <div class="ptab-content active" id="ptab-overview">
+    <!-- Campaign basic info grid -->
+    <div class="panel-section">
+      <div class="panel-section-title">Campaign Info</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Campaign ID</div><div class="info-val" id="pi-campid" style="font-family:'DM Mono',monospace;font-size:13px">–</div></div>
+        <div class="info-item"><div class="info-label">Brand</div><div class="info-val" id="pi-brand">–</div></div>
+        <div class="info-item"><div class="info-label">Uploaded by</div><div class="info-val" id="pi-uploader">–</div></div>
+        <div class="info-item"><div class="info-label">Schedule date</div><div class="info-val" id="pi-schedule">–</div></div>
+        <div class="info-item"><div class="info-label">Send date</div><div class="info-val" id="pi-send">–</div></div>
+        <div class="info-item"><div class="info-label">Channels</div><div class="info-val" id="pi-type">–</div></div>
+        <div class="info-item"><div class="info-label">Current status</div><div class="info-val" id="pi-status">–</div></div>
+      </div>
+    </div>
+
+    <!-- Campaign brief text -->
+    <div class="panel-section">
+      <div class="panel-section-title">Brief</div>
+      <div style="font-size:13.5px;line-height:1.6;color:var(--muted)" id="pi-brief">–</div>
+    </div>
+
+    <!-- Visual stage progress tracker -->
+    <div class="panel-section">
+      <div class="panel-section-title">Stage Progress</div>
+      <div class="stage-list" id="pi-stages"></div>
+    </div>
+
+    <!-- Segment counts — with channel dropdown, approve/decline buttons -->
+    <div class="panel-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="panel-section-title" style="margin-bottom:0">Segment Counts</div>
+      </div>
+      <!-- Table header -->
+      <div style="display:grid;grid-template-columns:2fr 1.2fr 90px 130px;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:var(--radius-sm) var(--radius-sm) 0 0;border:1px solid var(--border);border-bottom:none">
+        <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Segment</span>
+        <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Via</span>
+        <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Count</span>
+        <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Action</span>
+      </div>
+      <!-- Segment rows filled by JS -->
+      <div id="pi-segs-overview" style="border:1px solid var(--border);border-radius:0 0 var(--radius-sm) var(--radius-sm);overflow:hidden"></div>
+    </div>
+  </div>
+
+  <div class="ptab-content" id="ptab-content">
+    <div class="panel-section">
+      <!-- Header row with Edit / Save buttons -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="panel-section-title" style="margin-bottom:0">Content Copy</div>
+        <div style="display:flex;gap:8px">
+          <!-- Edit button — shown by default -->
+          <button id="contentEditBtn" class="btn" style="font-size:12px;padding:5px 12px" onclick="enableContentEdit()">✏ Edit</button>
+          <!-- Save button — hidden until editing -->
+          <button id="contentSaveBtn" class="btn btn-primary" style="font-size:12px;padding:5px 12px;display:none" onclick="saveContentEdit()">✓ Save</button>
+          <button id="contentCancelBtn" class="btn" style="font-size:12px;padding:5px 12px;display:none" onclick="cancelContentEdit()">Cancel</button>
+        </div>
+      </div>
+      <!-- Read-only view of content -->
+      <div id="pi-copy-view" style="background:var(--bg);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap">–</div>
+      <!-- Editable textarea — hidden until Edit clicked -->
+      <textarea id="pi-copy-edit" style="display:none;width:100%;min-height:160px;border:1.5px solid var(--text);border-radius:var(--radius-sm);padding:14px 16px;font-size:13px;line-height:1.7;font-family:'DM Sans',sans-serif;resize:vertical"></textarea>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Creative Assets</div>
+      <div id="pi-assets"></div>
+      <!-- Re-upload option shown when editing -->
+      <div id="pi-assets-upload" style="display:none;margin-top:10px">
+        <div class="upload-zone" onclick="alert('File picker would open here')">
+          <div class="upload-zone-icon">⬆</div>
+          <div style="font-weight:500;margin-bottom:4px">Replace or add files</div>
+          <div style="font-size:12px">PNG, JPG, HTML, ZIP · Max 50MB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ptab-content" id="ptab-segments">
+    <div class="panel-section">
+      <div class="panel-section-title">Segment Specifications</div>
+      <table class="seg-table" style="width:100%">
+        <thead><tr><th>Segment</th><th>Count</th><th>Status</th></tr></thead>
+        <tbody id="pi-segs"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="ptab-content" id="ptab-approvals">
+    <div class="panel-section">
+      <div class="panel-section-title">Pending Approvals</div>
+      <div id="pi-approvals"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const campaigns = [
+  { id:1, campId:"OCE-2025-001", name:"Summer Denim Drop", brand:"Zara India", uploader:"priya@zaraindia.com", schedule:"12 Jun 2025", send:"15 Jun 2025", sendTime:"10:00", channels:["Email","WhatsApp"], status:"Awaiting Approval", stages:[2,2,2,1,0,0], brief:"Drive sales for new denim collection targeting young urban women. Key message: 'Your summer, your style.' Offer: 20% off on all denims.", copy:"Subject: Your summer starts here 🌞\n\nHey [Name], the denim you've been waiting for just dropped. Shop the new summer collection and get 20% off — this weekend only.", assets:["Banner_1080x1080.png","Banner_300x250.png"], segs:[{name:"Active – Mumbai, Female 18–35",channel:"Email",count:"1,24,000",status:"approved"},{name:"Lapsed – Last 90 days",channel:"WhatsApp",count:"43,200",status:"pending"},{name:"High AOV – All metros",channel:"Email",count:"18,500",status:"declined"}], approvals:[{label:"Segment counts",sub:"2 of 3 approved",done:false},{label:"Creative & content",sub:"Pending client review",done:false}] },
+  { id:2, campId:"OCE-2025-002", name:"Monsoon BOGO Offer", brand:"Nykaa", uploader:"karan@nykaa.com", schedule:"1 Jul 2025", send:"3 Jul 2025", sendTime:"09:30", channels:["SMS","Push Notification"], status:"Testing", stages:[2,2,1,0,0,0], brief:"Buy one get one on select skincare during monsoon season. Target existing customers with high repeat purchase frequency.", copy:"Nykaa: Monsoon magic is here! Buy 1 Get 1 FREE on top skincare picks. Use code MONSOON. Shop now: nyk.aa/monsoon25", assets:["SMS_Copy.txt","Push_Banner.png"], segs:[{name:"Repeat buyers – Skincare",channel:"SMS",count:"89,000",status:"approved"},{name:"New users – Skincare interest",channel:"Push Notification",count:"34,500",status:"pending"}], approvals:[{label:"Segment counts",sub:"Awaiting data team",done:false},{label:"Creative & content",sub:"Approved by client",done:true}] },
+  { id:3, campId:"OCE-2025-003", name:"App Reengagement Q2", brand:"Myntra", uploader:"sneha@myntra.com", schedule:"20 Jun 2025", send:"22 Jun 2025", sendTime:"11:00", channels:["Push Notification","In-App"], status:"Brief Received", stages:[2,1,0,0,0,0], brief:"Re-engage users who haven't opened the app in 60+ days. Personalised push with category recommendations.", copy:"", assets:[], segs:[{name:"Dormant – 60 days no open",channel:"Push Notification",count:"TBD",status:"pending"},{name:"Dormant – 90 days no open",channel:"In-App",count:"TBD",status:"pending"}], approvals:[{label:"Segment counts",sub:"Not yet submitted",done:false},{label:"Creative & content",sub:"Not yet uploaded",done:false}] },
+  { id:4, campId:"OCE-2025-004", name:"Lenskart Frame Festival", brand:"Lenskart", uploader:"rahul@lenskart.com", schedule:"5 Jul 2025", send:"7 Jul 2025", sendTime:"08:00", channels:["Email"], status:"Approved", stages:[2,2,2,2,2,0], brief:"Announce the Frame Festival sale — up to 50% off on 500+ frames. Focus on existing customers and lapsed buyers.", copy:"Subject: 🎉 Frame Festival is LIVE — Up to 50% OFF\n\nHi [Name], our biggest sale of the year starts now. 500+ styles, unbeatable prices.", assets:["Email_Header.png","Email_Full.html"], segs:[{name:"All existing customers",channel:"Email",count:"2,10,000",status:"approved"},{name:"Lapsed – last purchase 6m+",channel:"Email",count:"67,000",status:"approved"},{name:"Wishlist – eyewear",channel:"Email",count:"22,300",status:"approved"}], approvals:[{label:"Segment counts",sub:"All approved",done:true},{label:"Creative & content",sub:"Approved 10 Jun",done:true}] },
+  { id:5, campId:"OCE-2025-005", name:"WhatsApp Flash Sale", brand:"Zara India", uploader:"priya@zaraindia.com", schedule:"18 Jun 2025", send:"18 Jun 2025", sendTime:"14:00", channels:["WhatsApp","RCS"], status:"Live", stages:[2,2,2,2,2,2], brief:"24-hour flash sale via WhatsApp broadcast. Exclusive for opted-in subscribers.", copy:"", assets:["WA_Template.pdf"], segs:[{name:"WhatsApp opted-in – All",channel:"WhatsApp",count:"54,200",status:"approved"}], approvals:[{label:"Segment counts",sub:"Approved",done:true},{label:"Creative & content",sub:"Approved",done:true}] },
+];
+
+const logs = [
+  {time:"Today 11:42",user:"priya@zaraindia.com",action:"Submitted new campaign","detail":"Summer Denim Drop"},
+  {time:"Today 11:05",user:"data-team@oce.in",action:"Updated segment counts","detail":"Summer Denim Drop · Active – Mumbai"},
+  {time:"Today 10:30",user:"marketing@oce.in",action:"Moved to Testing","detail":"Monsoon BOGO Offer"},
+  {time:"Today 09:55",user:"karan@nykaa.com",action:"Uploaded creative assets","detail":"Monsoon BOGO Offer · Push_Banner.png"},
+  {time:"Yesterday 17:20",user:"sneha@myntra.com",action:"Submitted new campaign","detail":"App Reengagement Q2"},
+  {time:"Yesterday 16:45",user:"marketing@oce.in",action:"Assigned to data team","detail":"App Reengagement Q2"},
+  {time:"Yesterday 14:10",user:"rahul@lenskart.com",action:"Approved segment counts","detail":"Lenskart Frame Festival"},
+  {time:"Yesterday 13:00",user:"marketing@oce.in",action:"Sent for client approval","detail":"Lenskart Frame Festival"},
+  {time:"12 Jun 09:00",user:"priya@zaraindia.com",action:"Approved creative","detail":"WhatsApp Flash Sale"},
+  {time:"11 Jun 15:30",user:"data-team@oce.in",action:"Submitted segment counts","detail":"WhatsApp Flash Sale · 54,200"},
+  {time:"11 Jun 14:00",user:"marketing@oce.in",action:"Brief received","detail":"WhatsApp Flash Sale"},
+  {time:"10 Jun 10:00",user:"rahul@lenskart.com",action:"Campaign went Live","detail":"Lenskart Frame Festival"},
+];
+
+const stageLabels = ["Brief Received","Internal Review","Testing","Counts Updated","Approved","Live"];
+
+function statusBadge(s) {
+  const map = { "Brief Received":"badge-gray","Testing":"badge-blue","Awaiting Approval":"badge-amber","Approved":"badge-green","Live":"badge-green" };
+  return `<span class="badge ${map[s]||'badge-gray'}"><span class="dot"></span>${s}</span>`;
+}
+
+function renderStages(stages) {
+  return `<div class="stage-track">${stages.map(s=>`<div class="stage-dot ${s===2?'done':s===1?'active':''}"></div>`).join('')}</div>`;
+}
+
+const chIcon = {Email:'✉',SMS:'💬','Push Notification':'🔔',WhatsApp:'📱',RCS:'✦','In-App':'◻'};
+
+// ── Approve a segment — changes its status to approved and re-renders ──
+function approveSegment(campaignId, segmentIndex) {
+  const campaign = campaigns.find(c => c.id === campaignId);
+  if (!campaign) return;
+  campaign.segs[segmentIndex].status = 'approved';
+  logs.unshift({ time: 'Just now', user: 'You', action: 'Approved segment', detail: campaign.name + ' · ' + campaign.segs[segmentIndex].name });
+  openPanel(campaignId); // re-render the panel with updated data
+}
+
+// ── Decline a segment — changes its status to declined and re-renders ──
+function declineSegment(campaignId, segmentIndex) {
+  const campaign = campaigns.find(c => c.id === campaignId);
+  if (!campaign) return;
+  campaign.segs[segmentIndex].status = 'declined';
+  logs.unshift({ time: 'Just now', user: 'You', action: 'Declined segment', detail: campaign.name + ' · ' + campaign.segs[segmentIndex].name });
+  openPanel(campaignId);
+}
+
+// ── Update the channel assigned to a segment via the dropdown ──
+function updateSegChannel(campaignId, segmentIndex, newChannel) {
+  const campaign = campaigns.find(c => c.id === campaignId);
+  if (!campaign) return;
+  campaign.segs[segmentIndex].channel = newChannel;
+}
+
+// ── Switch content tab to edit mode ──
+function enableContentEdit() {
+  document.getElementById('pi-copy-view').style.display = 'none';
+  document.getElementById('pi-copy-edit').style.display = 'block';
+  document.getElementById('pi-assets-upload').style.display = 'block';
+  document.getElementById('contentEditBtn').style.display = 'none';
+  document.getElementById('contentSaveBtn').style.display = 'inline-flex';
+  document.getElementById('contentCancelBtn').style.display = 'inline-flex';
+}
+
+// ── Save the edited content back to the campaign data ──
+function saveContentEdit() {
+  // Find which campaign is open by reading the panel title
+  const title = document.getElementById('panelTitle').textContent;
+  const campaign = campaigns.find(c => c.name === title);
+  if (campaign) {
+    campaign.copy = document.getElementById('pi-copy-edit').value;
+    logs.unshift({ time: 'Just now', user: 'You', action: 'Edited content copy', detail: campaign.name });
+  }
+  // Switch back to read-only view with updated text
+  document.getElementById('pi-copy-view').textContent = document.getElementById('pi-copy-edit').value;
+  document.getElementById('pi-copy-view').style.display = 'block';
+  document.getElementById('pi-copy-edit').style.display = 'none';
+  document.getElementById('pi-assets-upload').style.display = 'none';
+  document.getElementById('contentEditBtn').style.display = 'inline-flex';
+  document.getElementById('contentSaveBtn').style.display = 'none';
+  document.getElementById('contentCancelBtn').style.display = 'none';
+}
+
+// ── Cancel editing — discard changes ──
+function cancelContentEdit() {
+  const copyView = document.getElementById('pi-copy-view');
+  document.getElementById('pi-copy-edit').value = copyView.textContent;
+  document.getElementById('pi-copy-view').style.display = 'block';
+  document.getElementById('pi-copy-edit').style.display = 'none';
+  document.getElementById('pi-assets-upload').style.display = 'none';
+  document.getElementById('contentEditBtn').style.display = 'inline-flex';
+  document.getElementById('contentSaveBtn').style.display = 'none';
+  document.getElementById('contentCancelBtn').style.display = 'none';
+}
+
+// ── Open a campaign in edit mode from the client campaign list ──
+function openEditCampaign(campaignId) {
+  openPanel(campaignId);       // open the detail panel first
+  switchPTab('content', document.querySelectorAll('.ptab')[1]); // jump straight to Content tab
+  enableContentEdit();          // put it straight into edit mode
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('campBody');
+  const rows = [];
+  data.forEach(c => {
+    const chs = c.channels || [c.type || 'Unknown'];
+    chs.forEach((ch, i) => {
+      const isFirst = i === 0;
+      rows.push(`<tr onclick="openPanel(${c.id})">
+        <td style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${isFirst ? (c.campId||'–') : ''}</td>
+        <td>
+          <div class="campaign-name">${isFirst ? c.name : '<span style="color:var(--muted);font-size:12px">↳ same campaign</span>'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace">${isFirst ? c.brand : ''}</div>
+        </td>
+        <td><span style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;background:var(--surface2);padding:3px 10px;border-radius:20px;font-weight:500">${chIcon[ch]||'·'} ${ch}</span></td>
+        <td style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${c.send}${c.sendTime?' · '+c.sendTime:''}</td>
+        <td>${statusBadge(c.status)}</td>
+        <td>${renderStages(c.stages)}</td>
+        <td style="font-size:12px;color:var(--muted)">${isFirst ? c.uploader : ''}</td>
+        <td style="font-size:13px;font-family:'DM Mono',monospace">${isFirst ? c.segs.length : ''}</td>
+      </tr>`);
+    });
+  });
+  tbody.innerHTML = rows.join('');
+}
+
+function renderClientList(data) {
+  const el = document.getElementById('clientCampList');
+  if(!el) return;
+  const mine = data.filter(c=>c.brand==='Zara India');
+  if(!mine.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0">No campaigns yet.</div>'; return; }
+  el.innerHTML = mine.map(c=>{
+    const chs = c.channels || [c.type||''];
+    const chDisplay = chs.map(ch=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;background:var(--surface2);padding:2px 8px;border-radius:20px;margin-right:4px">${chIcon[ch]||''} ${ch}</span>`).join('');
+    return `<div class="client-camp-card" onclick="openPanel(${c.id})">
+      <div style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">◈</div>
+      <div class="client-camp-info">
+        <div class="client-camp-name">${c.name}</div>
+        <div style="margin-top:5px">${chDisplay}</div>
+        <div class="client-camp-meta" style="margin-top:4px">Send ${c.send}${c.sendTime?' · '+c.sendTime:''}</div>
+      </div>
+      <div class="client-stage">${statusBadge(c.status)}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterCamps(status, el) {
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = status==='All' ? campaigns : campaigns.filter(c=>c.status===status);
+  renderTable(filtered);
+}
+
+function searchCamps(q) {
+  const filtered = q ? campaigns.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())||c.brand.toLowerCase().includes(q.toLowerCase())) : campaigns;
+  renderTable(filtered);
+}
+
+function openPanel(id) {
+  const c = campaigns.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('panelTitle').textContent = c.name;
+  document.getElementById('panelBrand').textContent = c.brand + ' · ' + ((c.channels && c.channels.length) ? c.channels.join(', ') : (c.type || 'Campaign'));
+  document.getElementById('pi-campid').textContent = c.campId || '–';
+  document.getElementById('pi-brand').textContent = c.brand;
+  document.getElementById('pi-uploader').textContent = c.uploader;
+  document.getElementById('pi-schedule').textContent = c.schedule;
+  document.getElementById('pi-send').textContent = c.send;
+  document.getElementById('pi-type').textContent = ((c.channels && c.channels.length) ? c.channels.join(', ') : (c.type || 'Campaign'));
+  document.getElementById('pi-status').innerHTML = statusBadge(c.status);
+  document.getElementById('pi-brief').textContent = c.brief || 'No brief provided yet.';
+
+  // Content tab — populate read-only view, store for editing
+  const copyView = document.getElementById('pi-copy-view');
+  const copyEdit = document.getElementById('pi-copy-edit');
+  copyView.textContent = c.copy || 'No content uploaded yet.';
+  copyEdit.value = c.copy || '';
+  // Reset edit mode to view mode every time panel opens
+  copyView.style.display = 'block';
+  copyEdit.style.display = 'none';
+  document.getElementById('contentEditBtn').style.display = 'inline-flex';
+  document.getElementById('contentSaveBtn').style.display = 'none';
+  document.getElementById('contentCancelBtn').style.display = 'none';
+  document.getElementById('pi-assets-upload').style.display = 'none';
+
+  document.getElementById('pi-stages').innerHTML = stageLabels.map((l,i)=>{
+    const s = c.stages[i];
+    const cls = s===2?'stage-done':s===1?'stage-active':'stage-pending';
+    const icon = s===2?'✓':s===1?'→':'○';
+    const time = s===2?'Done':s===1?'In progress':'Pending';
+    return `<div class="stage-row"><div class="stage-icon ${cls}">${icon}</div><div class="stage-name">${l}</div><div class="stage-time">${time}</div></div>`;
+  }).join('');
+
+  document.getElementById('pi-assets').innerHTML = c.assets.length ? c.assets.map(a=>`
+    <div class="upload-item">
+      <span class="upload-icon">📄</span>
+      <div><div class="upload-name">${a}</div><div class="upload-meta">Uploaded by ${c.uploader}</div></div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px">No assets uploaded yet.</div>';
+
+  // Build all channel options for the dropdown
+  const allChannels = ['Email','SMS','Push Notification','WhatsApp','RCS','In-App'];
+  const channelOptions = allChannels.map(ch =>
+    `<option value="${ch}">${chIcon[ch] || ''} ${ch}</option>`
+  ).join('');
+
+  // Render each segment as a row: name | channel dropdown | count | approve+decline buttons
+  document.getElementById('pi-segs-overview').innerHTML = c.segs.map((s, segIndex) => {
+    // Pick the right badge colour based on status
+    const statusColour = s.status === 'approved'
+      ? 'background:var(--green-bg);color:var(--green)'
+      : s.status === 'declined'
+      ? 'background:var(--red-bg);color:var(--red)'
+      : 'background:var(--amber-bg);color:var(--amber)';
+    const statusLabel = s.status === 'approved' ? '✓ Approved' : s.status === 'declined' ? '✗ Declined' : '⏳ Pending';
+
+    // Build channel dropdown — pre-select the segment's current channel
+    const dropdownOptions = allChannels.map(ch =>
+      `<option value="${ch}" ${ch === s.channel ? 'selected' : ''}>${chIcon[ch] || ''} ${ch}</option>`
+    ).join('');
+
+    return `<div style="display:grid;grid-template-columns:2fr 1.2fr 90px 130px;gap:8px;align-items:center;padding:10px 10px;border-bottom:1px solid var(--border);background:var(--surface)" class="seg-row-hover">
+      <span style="font-size:13px;font-weight:500">${s.name}</span>
+      <select onchange="updateSegChannel(${c.id}, ${segIndex}, this.value)"
+        style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-family:'DM Sans',sans-serif;cursor:pointer">
+        ${dropdownOptions}
+      </select>
+      <span style="font-size:13px;font-family:'DM Mono',monospace">${s.count}</span>
+      <div style="display:flex;gap:5px;align-items:center">
+        ${s.status === 'approved'
+          ? `<span style="font-size:11.5px;font-weight:500;padding:3px 8px;border-radius:20px;${statusColour}">${statusLabel}</span>`
+          : s.status === 'declined'
+          ? `<span style="font-size:11.5px;font-weight:500;padding:3px 8px;border-radius:20px;${statusColour}">${statusLabel}</span>`
+          : `<button onclick="approveSegment(${c.id}, ${segIndex})"
+              style="font-size:11.5px;font-weight:500;padding:4px 9px;border-radius:var(--radius-sm);border:1px solid var(--green);background:var(--green-bg);color:var(--green);cursor:pointer;font-family:'DM Sans',sans-serif">
+              ✓ Approve
+            </button>
+            <button onclick="declineSegment(${c.id}, ${segIndex})"
+              style="font-size:11.5px;font-weight:500;padding:4px 9px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif">
+              ✗
+            </button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('pi-approvals').innerHTML = c.approvals.map(a=>`
+    <div class="approval-box">
+      <div><div class="approval-label">${a.label}</div><div class="approval-sub">${a.sub}</div></div>
+      ${a.done ? '<span class="badge badge-green"><span class="dot"></span>Approved</span>' : '<button class="approve-btn" onclick="event.stopPropagation()">Approve</button>'}
+    </div>`).join('');
+
+  document.getElementById('panelOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+  switchPTab('overview', document.querySelector('.ptab'));
+}
+
+function closePanel() {
+  document.getElementById('panelOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+function switchPTab(name, el) {
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ptab-content').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('ptab-'+name).classList.add('active');
+}
+
+function setView(view, el) {
+  const tabs = document.querySelectorAll('.view-tab');
+  tabs.forEach(t=>t.classList.remove('active'));
+  if(el) {
+    el.classList.add('active');
+  } else if(view === 'client' && tabs[1]) {
+    tabs[1].classList.add('active');
+  } else if(tabs[0]) {
+    tabs[0].classList.add('active');
+  }
+  document.getElementById('internalView').style.display = view==='internal' ? 'block' : 'none';
+  document.getElementById('clientView').style.display = view==='client' ? 'block' : 'none';
+  if(view==='client') { showClientList(); renderClientList(campaigns); }
+}
+
+function switchToClient() {
+  setView('client', document.querySelectorAll('.view-tab')[1]);
+}
+
+function renderClientList(data) {
+  const el = document.getElementById('clientCampList');
+  if(!el) return;
+  const mine = (data||[]).filter(c=>c.brand==='Zara India');
+  if(!mine.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0">No campaigns yet. Click + New Campaign to get started.</div>'; return; }
+  el.innerHTML = mine.map(c=>{
+    const chs = c.channels || [c.type||''];
+    const chDisplay = chs.map(ch=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;background:var(--surface2);padding:2px 8px;border-radius:20px;margin-right:4px">${chIcon[ch]||''} ${ch}</span>`).join('');
+    return `<div class="client-camp-card">
+      <div style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer" onclick="openPanel(${c.id})">◈</div>
+      <div class="client-camp-info" onclick="openPanel(${c.id})" style="cursor:pointer">
+        <div class="client-camp-name">${c.name}</div>
+        <div style="margin-top:5px">${chDisplay}</div>
+        <div class="client-camp-meta" style="margin-top:4px">Send ${c.send}${c.sendTime && c.sendTime!=='TBD' ? ' · '+c.sendTime : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+        ${statusBadge(c.status)}
+        <button class="btn" style="font-size:11px;padding:4px 10px" onclick="openEditCampaign(${c.id})">✏ Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLogs(data) {
+  const tbody = document.getElementById('logsBody');
+  if(!tbody) return;
+  tbody.innerHTML = data.map(l=>`
+    <tr>
+      <td style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap">${l.time}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${l.user}</td>
+      <td style="font-size:13px;font-weight:500">${l.action}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${l.detail}</td>
+    </tr>`).join('');
+}
+
+function filterLogs(q) {
+  const filtered = q ? logs.filter(l=>l.action.toLowerCase().includes(q.toLowerCase())||l.user.toLowerCase().includes(q.toLowerCase())||l.detail.toLowerCase().includes(q.toLowerCase())) : logs;
+  renderLogs(filtered);
+}
+
+function showPage(name) {
+  setView('internal', document.querySelectorAll('.view-tab')[0]);
+  ['dashboard','new','logs'].forEach(p => {
+    const el = document.getElementById('page-'+p);
+    if(el) el.style.display = p===name?'block':'none';
+  });
+  if(name==='logs') renderLogs(logs);
+}
+
+function showClientNew() {
+  selectedChannels.length = 0;
+  document.querySelectorAll('.ch-chip').forEach(b=>b.classList.remove('selected'));
+  const cc = document.getElementById('channelContentCards');
+  if(cc) cc.innerHTML = '';
+  document.getElementById('clientList').style.display = 'none';
+  document.getElementById('clientNew').style.display = 'block';
+}
+
+function showClientList() {
+  document.getElementById('clientList').style.display = 'block';
+  document.getElementById('clientNew').style.display = 'none';
+}
+
+function addSeg() {
+  const row = document.createElement('div');
+  row.className = 'seg-input-row';
+  row.innerHTML = '<input type="text" placeholder="Segment name"><input type="text" placeholder="TBD" style="font-family:\'DM Mono\',monospace"><button class="remove-btn" onclick="removeSeg(this)">✕</button>';
+  document.getElementById('segRows').appendChild(row);
+}
+
+function addClientSeg() {
+  const row = document.createElement('div');
+  row.className = 'seg-input-row';
+  row.style.gridTemplateColumns = '1fr 28px';
+  row.innerHTML = '<input type="text" placeholder="Describe your target segment"><button class="remove-btn" onclick="removeSeg(this)">✕</button>';
+  document.getElementById('clientSegRows').appendChild(row);
+}
+
+function removeSeg(btn) { btn.parentElement.remove(); }
+
+// ── Generate a unique campaign ID like OCE-2025-006 ──
+// Looks at all existing campaigns, finds the highest number, adds 1
+function generateCampId() {
+  const year = new Date().getFullYear();
+  const existingNumbers = campaigns
+    .map(c => {
+      const match = c.campId && c.campId.match(/OCE-\d{4}-(\d{3})/);
+      return match ? parseInt(match[1]) : 0;
+    });
+  const highest = Math.max(0, ...existingNumbers);
+  const next = String(highest + 1).padStart(3, '0'); // always 3 digits e.g. 006
+  return 'OCE-' + year + '-' + next;
+}
+
+const ASSIGNEE_KEY = 'oce_assignees';
+function getAssignees() { try { return JSON.parse(localStorage.getItem(ASSIGNEE_KEY)||'[]'); } catch(e) { return []; } }
+function saveAssignee(email) {
+  if(!email||!email.includes('@')) return;
+  const list = getAssignees();
+  if(!list.includes(email)) { list.unshift(email); localStorage.setItem(ASSIGNEE_KEY, JSON.stringify(list.slice(0,20))); }
+}
+function filterAssignSuggestions(val) {
+  const box = document.getElementById('assignSuggestions');
+  const list = getAssignees();
+  const filtered = val ? list.filter(e=>e.toLowerCase().includes(val.toLowerCase())) : list;
+  if(!filtered.length) { box.style.display='none'; return; }
+  box.innerHTML = filtered.map(e=>`<div onclick="selectAssignee('${e}')" style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background=''"><div style="width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0">${e[0].toUpperCase()}</div><span>${e}</span></div>`).join('');
+  box.style.display = 'block';
+}
+function selectAssignee(email) { document.getElementById('assigneeInput').value = email; hideAssignSuggestions(); }
+function hideAssignSuggestions() { document.getElementById('assignSuggestions').style.display='none'; }
+function saveCampaign() { alert('Campaign saved. Visible to all internal teams immediately.'); showPage('dashboard'); }
+function formatClientDate(value) {
+  if(!value) return 'TBD';
+  const dt = new Date(value + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function submitClientCamp() {
+  const form = document.getElementById('clientNew');
+  const nameInput = form.querySelector('input[placeholder^="e.g. Monsoon"]');
+  const uploaderInput = form.querySelector('input[placeholder="priya@zaraindia.com"]');
+  const dateInput = form.querySelector('input[type="date"]');
+  const timeInput = form.querySelector('input[type="time"]');
+  const briefInput = form.querySelector('textarea[placeholder^="Describe the campaign goal"]');
+  const assigneeEmail = (document.getElementById('assigneeInput')||{}).value||'';
+
+  const campaignName = (nameInput.value || '').trim() || 'Untitled Client Campaign';
+  const uploader = (uploaderInput.value || '').trim() || 'client@zaraindia.com';
+  const chosenChannels = selectedChannels.length ? [...selectedChannels] : ['Email'];
+  const segmentInputs = [...document.querySelectorAll('#clientSegRows input')].map(i => i.value.trim()).filter(Boolean);
+
+  const newCampaign = {
+    id: Math.max(...campaigns.map(c=>c.id)) + 1,
+    campId: generateCampId(),
+    name: campaignName,
+    brand: 'Zara India',
+    uploader,
+    schedule: formatClientDate(dateInput.value),
+    send: formatClientDate(dateInput.value),
+    sendTime: timeInput.value || 'TBD',
+    channels: chosenChannels,
+    status: 'Brief Received',
+    stages: [2,1,0,0,0,0],
+    brief: (briefInput.value || '').trim() || 'No brief provided yet.',
+    copy: '',
+    assets: [],
+    segs: (segmentInputs.length ? segmentInputs : ['Segment details pending']).map(s => ({ name:s, count:'TBD', status:'pending' })),
+    approvals: [
+      {label:'Segment counts', sub:'Awaiting data team', done:false},
+      {label:'Creative & content', sub:'Pending internal review', done:false}
+    ]
+  };
+
+  campaigns.unshift(newCampaign);
+  logs.unshift({time:'Just now', user:uploader, action:'Submitted new campaign', detail:campaignName});
+  if(assigneeEmail.trim()) saveAssignee(assigneeEmail.trim());
+  renderTable(campaigns);
+  renderClientList(campaigns);
+  showClientList();
+  alert((assigneeEmail.trim() ? 'Submitted and assigned to ' + assigneeEmail.trim() + '.' : 'Submitted to OCE team.') + ' It has been added to your campaign list.');
+}
+
+
+const channelConfig = {
+  'Email': {
+    icon: '✉',
+    sub: 'Provide subject line, email body, and creative assets',
+    fields: `
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Subject Line</label>
+        <input type="text" placeholder="e.g. Your summer starts here 🌞">
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Preview Text</label>
+        <input type="text" placeholder="Short text shown in inbox preview...">
+      </div>
+      <div class="form-group full" style="margin-bottom:16px">
+        <label>Email Body</label>
+        <textarea style="min-height:120px" placeholder="Paste your full email copy here..."></textarea>
+      </div>
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase">Creative / HTML Template</label>
+      <div class="upload-zone" onclick="alert('File picker')">
+        <div class="upload-zone-icon">⬆</div>
+        <div style="font-weight:500;margin-bottom:4px">Upload email creative</div>
+        <div style="font-size:12px">HTML, PNG, JPG · Max 50MB</div>
+      </div>`
+  },
+  'SMS': {
+    icon: '💬',
+    sub: 'Keep it under 160 characters for a single SMS',
+    fields: `
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>SMS Copy <span style="font-weight:400;color:var(--muted)" id="smsCount">(0 / 160)</span></label>
+        <textarea style="min-height:80px" placeholder="Type your SMS message here..." maxlength="320" oninput="updateSmsCount(this)"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Sender ID / Short Code</label>
+        <input type="text" placeholder="e.g. ZARAIN or 1800-xxx-xxxx">
+      </div>`
+  },
+  'Push Notification': {
+    icon: '🔔',
+    sub: 'Title + body shown on device lock screen',
+    fields: `
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Notification Title</label>
+        <input type="text" placeholder="e.g. Flash sale starts now! (max 50 chars)" maxlength="50">
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Notification Body</label>
+        <textarea style="min-height:70px" placeholder="Short message shown below the title... (max 100 chars)" maxlength="100"></textarea>
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Deep Link / CTA URL</label>
+        <input type="text" placeholder="e.g. app://sale or https://...">
+      </div>
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase">Push Banner Image (optional)</label>
+      <div class="upload-zone" onclick="alert('File picker')">
+        <div class="upload-zone-icon">⬆</div>
+        <div style="font-weight:500;margin-bottom:4px">Upload banner image</div>
+        <div style="font-size:12px">PNG, JPG · Recommended 1200×628px</div>
+      </div>`
+  },
+  'WhatsApp': {
+    icon: '📱',
+    sub: 'Template must be pre-approved by Meta before sending',
+    fields: `
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Template Name</label>
+        <input type="text" placeholder="e.g. summer_sale_v1 (snake_case, no spaces)">
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Message Body</label>
+        <textarea style="min-height:100px" placeholder="Paste your WhatsApp template body. Use {{1}}, {{2}} for variables..."></textarea>
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>CTA Button Text (optional)</label>
+        <input type="text" placeholder="e.g. Shop Now">
+      </div>
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase">Header Image / Document (optional)</label>
+      <div class="upload-zone" onclick="alert('File picker')">
+        <div class="upload-zone-icon">⬆</div>
+        <div style="font-weight:500;margin-bottom:4px">Upload header media</div>
+        <div style="font-size:12px">PNG, JPG, PDF · Max 10MB</div>
+      </div>`
+  },
+  'RCS': {
+    icon: '✦',
+    sub: 'Rich message details for RCS campaigns',
+    fields: `
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>RCS Message</label>
+        <textarea style="min-height:100px" placeholder="Paste your RCS message copy here..."></textarea>
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>CTA / Suggested Reply</label>
+        <input type="text" placeholder="e.g. Shop Now / Know More">
+      </div>
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase">Rich Media Asset</label>
+      <div class="upload-zone" onclick="alert('File picker')">
+        <div class="upload-zone-icon">⬆</div>
+        <div style="font-weight:500;margin-bottom:4px">Upload RCS creative</div>
+        <div style="font-size:12px">PNG, JPG, GIF · Max 10MB</div>
+      </div>`
+  },
+  'In-App': {
+    icon: '◻',
+    sub: 'In-app banner, modal, or message details',
+    fields: `
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>In-App Title</label>
+        <input type="text" placeholder="e.g. Sale is live now">
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>In-App Message</label>
+        <textarea style="min-height:90px" placeholder="Paste your in-app copy here..."></textarea>
+      </div>
+      <div class="form-group full" style="margin-bottom:14px">
+        <label>Target Screen / Deeplink</label>
+        <input type="text" placeholder="e.g. app://sale-page">
+      </div>`
+  }
+};
+
+const selectedChannels = [];
+
+function toggleChannel(btn) {
+  const ch = btn.dataset.ch;
+  const idx = selectedChannels.indexOf(ch);
+  if(idx === -1) {
+    selectedChannels.push(ch);
+    btn.classList.add('selected');
+  } else {
+    selectedChannels.splice(idx, 1);
+    btn.classList.remove('selected');
+  }
+  renderChannelCards();
+}
+
+function renderChannelCards() {
+  const container = document.getElementById('channelContentCards');
+  if(!container) return;
+  const order = ['Email','SMS','Push Notification','WhatsApp','RCS','In-App'];
+  const active = order.filter(c => selectedChannels.includes(c));
+  if(!active.length) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = active.map(ch => {
+    const cfg = channelConfig[ch];
+    return `<div class="ch-card">
+      <div class="ch-card-header"><span class="ch-icon">${cfg.icon}</span><span class="ch-title">${ch}</span></div>
+      <div class="ch-sub">${cfg.sub}</div>
+      ${cfg.fields}
+    </div>`;
+  }).join('');
+}
+
+function updateSmsCount(el) {
+  const counter = document.getElementById('smsCount');
+  if(counter) counter.textContent = '(' + el.value.length + ' / 160)';
+}
+
+renderTable(campaigns);
+</script>
+</body>
+</html>
